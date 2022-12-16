@@ -9,6 +9,10 @@ namespace dae
 		// Save the technique of the effect as a member variable
 		m_pTechnique = m_pEffect->GetTechniqueByName("DefaultTechnique");
 		if (!m_pTechnique->IsValid()) std::wcout << L"Technique not valid\n";
+
+		// Save the worldviewprojection variable of the effect as a member variable
+		m_pMatWorldViewProjVariable = m_pEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
+		if (!m_pMatWorldViewProjVariable->IsValid()) std::wcout << L"m_pMatWorldViewProjVariable not valid\n";
 	}
 
 	Effect::~Effect()
@@ -26,11 +30,17 @@ namespace dae
 		return m_pTechnique;
 	}
 
-	ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)
+	void Effect::SetWorldViewProjectionMatrix(const Matrix& matrix)
+	{
+		// Set the current matrix to the worldviewprojection variable of the effect
+		m_pMatWorldViewProjVariable->SetMatrix(reinterpret_cast<const float*>(&matrix));
+	}
+
+	ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile) const
 	{
 		HRESULT result;
 		ID3D10Blob* pErrorBlob{ nullptr };
-		ID3DX11Effect* pEffect;
+		ID3DX11Effect* pEffect{};
 
 		DWORD shaderFlags{ 0 };
 

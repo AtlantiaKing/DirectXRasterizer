@@ -6,6 +6,7 @@ struct SDL_Surface;
 namespace dae
 {
 	class Mesh;
+	class Camera;
 
 	class Renderer final
 	{
@@ -20,8 +21,16 @@ namespace dae
 
 		void Update(const Timer* pTimer);
 		void Render() const;
+		void ToggleRenderSampleState();
 
 	private:
+		enum class SampleState
+		{
+			Point,
+			Linear,
+			Anisotropic
+		};
+
 		SDL_Window* m_pWindow{};
 
 		int m_Width{};
@@ -29,9 +38,12 @@ namespace dae
 
 		bool m_IsInitialized{ false };
 
+		Camera* m_pCamera{};
 		Mesh* m_pMesh{};
+		SampleState m_SampleState{ SampleState::Point };
 
 		//DIRECTX
+		ID3D11SamplerState* m_pSampleState{};
 		ID3D11Device* m_pDevice{};
 		ID3D11DeviceContext* m_pDeviceContext{};
 		IDXGISwapChain* m_pSwapChain{};
@@ -41,5 +53,7 @@ namespace dae
 		ID3D11RenderTargetView* m_pRenderTargetView{};
 
 		HRESULT InitializeDirectX();
+		void LoadSampleState(D3D11_FILTER filter);
+		void UpdateWorldViewProjection();
 	};
 }

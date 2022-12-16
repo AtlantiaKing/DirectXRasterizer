@@ -1,39 +1,30 @@
 #include "pch.h"
 #include "Mesh.h"
-#include "Effect.h"
+#include "Texture.h"
+#include "EffectPosTex.h"
+#include "Utils.h"
 
 namespace dae
 {
-	Mesh::Mesh(ID3D11Device* pDevice, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-		: m_pEffect{ new Effect{ pDevice, L"Resources/PosCol3D.fx" } }
-	{		
-		// Create Vertex Layout
-		static constexpr uint32_t numElements{ 2 };
-		D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
+	Mesh::Mesh(ID3D11Device* pDevice, const std::string& resourcePath, ID3D11SamplerState* pSampleState)
+		: m_pEffect{ new EffectPosTex{ pDevice, L"Resources/PosTex3D.fx" } }
+	{
+		// Load vertices and indices from a file
+		std::vector<Vertex> vertices{};
+		std::vector<uint32_t> indices{};
+		bool parseResult{ Utils::ParseOBJ(resourcePath, vertices, indices) };
+		if (!parseResult)
+		{
+			std::cout << "Failed to load OBJ from " << resourcePath << "\n";
+			return;
+		}
 
-		vertexDesc[0].SemanticName = "POSITION";
-		vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		vertexDesc[0].AlignedByteOffset = 0;
-		vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-
-		vertexDesc[1].SemanticName = "COLOR";
-		vertexDesc[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		vertexDesc[1].AlignedByteOffset = 12;
-		vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		// Create texture
+		m_pTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_diffuse.png");
+		m_pEffect->SetDiffuseMap(m_pTexture);
 
 		// Create Input Layout
-		D3DX11_PASS_DESC passDesc{};
-		m_pEffect->GetTechnique()->GetPassByIndex(0)->GetDesc(&passDesc);
-
-		HRESULT result { pDevice->CreateInputLayout
-			(
-				vertexDesc,
-				numElements,
-				passDesc.pIAInputSignature,
-				passDesc.IAInputSignatureSize,
-				&m_pInputLayout
-			) };
-		if (FAILED(result)) return;
+		m_pInputLayout = m_pEffect->LoadInputLayout(pDevice);
 
 		// Create vertex buffer
 		D3D11_BUFFER_DESC bd{};
@@ -46,7 +37,7 @@ namespace dae
 		D3D11_SUBRESOURCE_DATA initData{};
 		initData.pSysMem = vertices.data();
 
-		result = pDevice->CreateBuffer(&bd, &initData, &m_pVertexBuffer);
+		HRESULT result{ pDevice->CreateBuffer(&bd, &initData, &m_pVertexBuffer) };
 		if (FAILED(result)) return;
 
 		// Create index buffer
@@ -60,16 +51,20 @@ namespace dae
 
 		result = pDevice->CreateBuffer(&bd, &initData, &m_pIndexBuffer);
 		if (FAILED(result)) return;
+
+		if (pSampleState) SetSamplerState(pSampleState);
 	}
 
 	Mesh::~Mesh()
 	{
-		delete m_pEffect;
-
 		if(m_pIndexBuffer) m_pIndexBuffer->Release();
 		if (m_pVertexBuffer) m_pVertexBuffer->Release();
 
 		if (m_pInputLayout) m_pInputLayout->Release();
+
+		delete m_pTexture;
+
+		delete m_pEffect;
 	}
 
 	void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
@@ -82,7 +77,7 @@ namespace dae
 
 		// Set vertex buffer
 		constexpr UINT stride{ sizeof(Vertex) };
-		constexpr UINT offset{};
+		constexpr UINT offset{ 0 };
 		pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
 		// Set index buffer
@@ -96,5 +91,28 @@ namespace dae
 			m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
 			pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
 		}
+	}
+
+	void Mesh::SetPosition(const Vector3& position)
+	{
+		m_TranslationMatrix = Matrix::CreateTranslation(position);
+	}
+
+	void Mesh::RotateY(float rotation)
+	{
+		m_RotationMatrix = Matrix::CreateRotationY(rotation) * m_RotationMatrix;
+	}
+
+	void Mesh::SetWorldViewProjectionMatrix(const Matrix& viewProjectionMatrix)
+	{
+		m_pEffect->SetWorldViewProjectionMatrix(m_ScaleMatrix * m_RotationMatrix * m_TranslationMatrix * viewProjectionMatrix);
+	}
+
+	void Mesh::SetSamplerState(ID3D11SamplerState* pSampleState)
+	{
+		ID3DX11EffectSamplerVariable* pSamplerStateVariable{ m_pEffect->GetEffect()->GetVariableByName("gSamState")->AsSampler() };
+
+		HRESULT hr{ pSamplerStateVariable->SetSampler(0, pSampleState) };
+		if (FAILED(hr)) std::wcout << L"Failed to change sample state";
 	}
 }

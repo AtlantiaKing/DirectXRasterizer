@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 #include "Mesh.h"
+#include "Camera.h"
 
 namespace dae {
 
@@ -22,21 +23,20 @@ namespace dae {
 			std::cout << "DirectX initialization failed!\n";
 		}
 
-		// Create some date for our mesh
-		std::vector<Vertex> vertices
-		{
-			{ { 0.0f, 0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f } },
-			{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } },
-			{ { -0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } }
-		};
-		std::vector<uint32_t> indices{ 0, 1, 2 };
+		LoadSampleState(D3D11_FILTER_MIN_MAG_MIP_POINT);
 
-		m_pMesh = new Mesh{ m_pDevice, vertices, indices };
+		m_pMesh = new Mesh{ m_pDevice, "Resources/vehicle.obj", m_pSampleState};
+
+		m_pCamera = new Camera{};
+		m_pCamera->Initialize(45.0f, { 0.0f, 0.0f, -50.0f }, static_cast<float>(m_Width) / m_Height);
 	}
 
 	Renderer::~Renderer()
 	{
+		delete m_pCamera;
 		delete m_pMesh;
+
+		if (m_pSampleState) m_pSampleState->Release();
 
 		if (m_pRenderTargetView) m_pRenderTargetView->Release();
 		if (m_pRenderTargetBuffer) m_pRenderTargetBuffer->Release();
@@ -57,7 +57,12 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
+		m_pCamera->Update(pTimer);
 
+		const float rotateSpeed{ 45.0f };
+		m_pMesh->RotateY(rotateSpeed * TO_RADIANS * pTimer->GetElapsed());
+
+		UpdateWorldViewProjection();
 	}
 
 	void Renderer::Render() const
@@ -75,6 +80,33 @@ namespace dae {
 
 		// 3. Present backbuffer (swap)
 		m_pSwapChain->Present(0, 0);
+	}
+
+	void Renderer::ToggleRenderSampleState()
+	{
+		m_SampleState = static_cast<SampleState>((static_cast<int>(m_SampleState) + 1) % (static_cast<int>(SampleState::Anisotropic) + 1));
+
+		D3D11_FILTER newFilter{};
+		std::cout << "Changed sample state to: ";
+		switch (m_SampleState)
+		{
+		case dae::Renderer::SampleState::Point:
+			std::cout << "Point\n";
+			newFilter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			break;
+		case dae::Renderer::SampleState::Linear:
+			std::cout << "Linear\n";
+			newFilter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			break;
+		case dae::Renderer::SampleState::Anisotropic:
+			std::cout << "Anisotropic\n";
+			newFilter = D3D11_FILTER_ANISOTROPIC;
+			break;
+		}
+
+		LoadSampleState(newFilter);
+
+		m_pMesh->SetSamplerState(m_pSampleState);
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -96,11 +128,7 @@ namespace dae {
 		// Create DXGI Factory
 		IDXGIFactory1* pDxgiFactory{};
 		result = CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&pDxgiFactory));
-		if (FAILED(result))
-		{
-			pDxgiFactory->Release();
-			return result;
-		}
+		if (FAILED(result)) return result;
 
 		// Create the swapchain description
 		DXGI_SWAP_CHAIN_DESC swapChainDesc{};
@@ -174,14 +202,40 @@ namespace dae {
 
 		// 6. Set viewport
 		D3D11_VIEWPORT viewport{};
-		viewport.Width = static_cast<FLOAT>(m_Width);
-		viewport.Height = static_cast<FLOAT>(m_Height);
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0;
-		viewport.MaxDepth = 0;
+		viewport.Width = static_cast<float>(m_Width);
+		viewport.Height = static_cast<float>(m_Height);
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.f;
 		m_pDeviceContext->RSSetViewports(1, &viewport);
 
 		return S_OK;
+	}
+
+	void Renderer::LoadSampleState(D3D11_FILTER filter)
+	{
+		D3D11_SAMPLER_DESC sampleDesc{};
+		sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		sampleDesc.MipLODBias = 0;
+		sampleDesc.MinLOD = 0;
+		sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		sampleDesc.MaxAnisotropy = 16;
+		sampleDesc.Filter = filter;
+
+		if (m_pSampleState) m_pSampleState->Release();
+
+		HRESULT hr{ m_pDevice->CreateSamplerState(&sampleDesc, &m_pSampleState) };
+		if (FAILED(hr)) std::wcout << L"m_pSampleState failed to load\n";
+	}
+
+	void Renderer::UpdateWorldViewProjection()
+	{
+		const Matrix ViewProjMatrix{ m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix() };
+
+		m_pMesh->SetWorldViewProjectionMatrix(ViewProjMatrix);
 	}
 }

@@ -8,9 +8,14 @@
     <Filter Include="Misc">
       <UniqueIdentifier>{72056cb6-72a2-42b7-b05e-376f1ddd957e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Effects">
+      <UniqueIdentifier>{284a45d1-2cc0-4e17-b937-085eaedf175c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataTypes">
+      <UniqueIdentifier>{4e47e283-3b11-4bce-b725-eec07f47a578}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h" />
     <ClInclude Include="Vector3.h">
       <Filter>Math</Filter>
     </ClInclude>
@@ -33,15 +38,32 @@
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="ColorRGB.h">
-      <Filter>Math</Filter>
+    <ClInclude Include="EffectPosTex.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="Effect.h" />
-    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="EffectPosCol.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="Effect.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>DataTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorRGB.h">
+      <Filter>DataTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>DataTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>DataTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Vector3.cpp">
       <Filter>Math</Filter>
     </ClCompile>
@@ -58,7 +80,24 @@
       <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Effect.cpp" />
-    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="EffectPosCol.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectPosTex.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="Effect.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>DataTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>DataTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>DataTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
   </ItemGroup>
 </Project>
