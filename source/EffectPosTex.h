@@ -10,11 +10,8 @@ namespace dae
 	public:
 		EffectPosTex(ID3D11Device* pDevice, const std::wstring& assetFile);
 
+		virtual void SetMatrix(MatrixType type, const Matrix& matrix) override;
 		void SetTexture(Texture* pTexture);
-		void SetWorldMatrix(const Matrix& worldMatrix);
-		void SetInverseViewMatrix(const Matrix& viewMatrix);
-
-		virtual ID3D11InputLayout* LoadInputLayout(ID3D11Device* pDevice) override;
 	private:
 		ID3DX11EffectShaderResourceVariable* m_pDiffuseMapVariable{};
 		ID3DX11EffectShaderResourceVariable* m_pNormalMapVariable{};

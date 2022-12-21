@@ -39,7 +39,7 @@ namespace dae
 		bool m_IsInitialized{ false };
 
 		Camera* m_pCamera{};
-		Mesh* m_pMesh{};
+		std::vector<Mesh*> m_pMeshes{};
 		SampleState m_SampleState{ SampleState::Point };
 
 		//DIRECTX

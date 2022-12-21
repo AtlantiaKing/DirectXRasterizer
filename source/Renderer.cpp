@@ -2,6 +2,9 @@
 #include "Renderer.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "EffectPosTex.h"
+#include "EffectTransparent.h"
+#include "Texture.h"
 
 namespace dae {
 
@@ -25,7 +28,29 @@ namespace dae {
 
 		LoadSampleState(D3D11_FILTER_MIN_MAG_MIP_POINT);
 
-		m_pMesh = new Mesh{ m_pDevice, "Resources/vehicle.obj", m_pSampleState};
+		EffectPosTex* vehicleMaterial{ new EffectPosTex{ m_pDevice, L"Resources/PosTex3D.fx" } };
+		Texture* pVehicleDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_diffuse.png", Texture::TextureType::Diffuse) };
+		vehicleMaterial->SetTexture(pVehicleDiffuseTexture);
+		Texture* pNormalTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_normal.png", Texture::TextureType::Normal) };
+		vehicleMaterial->SetTexture(pNormalTexture);
+		Texture* pSpecularTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_specular.png", Texture::TextureType::Specular) };
+		vehicleMaterial->SetTexture(pSpecularTexture);
+		Texture* pGlossinessTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_gloss.png", Texture::TextureType::Glossiness) };
+		vehicleMaterial->SetTexture(pGlossinessTexture);
+		delete pGlossinessTexture;
+		delete pSpecularTexture;
+		delete pNormalTexture;
+		delete pVehicleDiffuseTexture;
+
+		Mesh* pVehicle{ new Mesh{ m_pDevice, "Resources/vehicle.obj", vehicleMaterial, m_pSampleState } };
+		m_pMeshes.push_back(pVehicle);
+
+		EffectTransparent* transparentMaterial{ new EffectTransparent{ m_pDevice, L"Resources/Transparent3D.fx" } };
+		Texture* pFireDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/fireFX_diffuse.png", Texture::TextureType::Diffuse) };
+		transparentMaterial->SetTexture(pFireDiffuseTexture);
+		Mesh* pFire{ new Mesh{ m_pDevice, "Resources/fireFX.obj", transparentMaterial, m_pSampleState } };
+		m_pMeshes.push_back(pFire);
+		delete pFireDiffuseTexture;
 
 		m_pCamera = new Camera{};
 		m_pCamera->Initialize(45.0f, { 0.0f, 0.0f, -50.0f }, static_cast<float>(m_Width) / m_Height);
@@ -34,7 +59,10 @@ namespace dae {
 	Renderer::~Renderer()
 	{
 		delete m_pCamera;
-		delete m_pMesh;
+		for (Mesh* pMesh : m_pMeshes)
+		{
+			delete pMesh;
+		}
 
 		if (m_pSampleState) m_pSampleState->Release();
 
@@ -60,7 +88,13 @@ namespace dae {
 		m_pCamera->Update(pTimer);
 
 		const float rotateSpeed{ 45.0f };
-		m_pMesh->RotateY(rotateSpeed * TO_RADIANS * pTimer->GetElapsed());
+		/*for_each(
+			begin(m_pMeshes),
+			end(m_pMeshes),
+			[&](Mesh* pMesh)
+			{
+				pMesh->RotateY(rotateSpeed * TO_RADIANS * pTimer->GetElapsed());
+			});*/
 
 		UpdateWorldViewProjection();
 	}
@@ -75,8 +109,14 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		// 2. Set pipeline + Invoke drawcalls (= render)
-		m_pMesh->Render(m_pDeviceContext);
+		// 2. Set pipeline + Invoke drawcalls (= render)for_each(
+		for_each(
+			begin(m_pMeshes),
+			end(m_pMeshes),
+			[&](Mesh* pMesh)
+			{
+				pMesh->Render(m_pDeviceContext);
+			});
 
 		// 3. Present backbuffer (swap)
 		m_pSwapChain->Present(0, 0);
@@ -106,7 +146,13 @@ namespace dae {
 
 		LoadSampleState(newFilter);
 
-		m_pMesh->SetSamplerState(m_pSampleState);
+		for_each(
+			begin(m_pMeshes),
+			end(m_pMeshes),
+			[&](Mesh* pMesh)
+			{
+				pMesh->SetSamplerState(m_pSampleState);
+			});
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -236,6 +282,12 @@ namespace dae {
 	{
 		const Matrix ViewProjMatrix{ m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix() };
 
-		m_pMesh->SetMatrices(ViewProjMatrix, m_pCamera->GetInverseViewMatrix());
+		for_each(
+			begin(m_pMeshes), 
+			end(m_pMeshes), 
+			[&](Mesh* pMesh)
+			{
+				pMesh->SetMatrices(ViewProjMatrix, m_pCamera->GetInverseViewMatrix());
+			});
 	}
 }

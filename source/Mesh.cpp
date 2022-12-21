@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "Mesh.h"
 #include "Texture.h"
-#include "EffectPosTex.h"
+#include "Effect.h"
 #include "Utils.h"
 
 namespace dae
 {
-	Mesh::Mesh(ID3D11Device* pDevice, const std::string& resourcePath, ID3D11SamplerState* pSampleState)
-		: m_pEffect{ new EffectPosTex{ pDevice, L"Resources/PosTex3D.fx" } }
+	Mesh::Mesh(ID3D11Device* pDevice, const std::string& resourcePath, Effect* pEffect, ID3D11SamplerState* pSampleState)
+		: m_pEffect{ pEffect }
 	{
 		// Load vertices and indices from a file
 		std::vector<Vertex> vertices{};
@@ -18,22 +18,6 @@ namespace dae
 			std::cout << "Failed to load OBJ from " << resourcePath << "\n";
 			return;
 		}
-
-		// Create diffuse texture
-		m_pDiffuseTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_diffuse.png", Texture::TextureType::Diffuse);
-		m_pEffect->SetTexture(m_pDiffuseTexture);
-
-		// Create normal texture
-		m_pNormalTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_normal.png", Texture::TextureType::Normal);
-		m_pEffect->SetTexture(m_pNormalTexture);
-
-		// Create specular texture
-		m_pSpecularTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_specular.png", Texture::TextureType::Specular);
-		m_pEffect->SetTexture(m_pSpecularTexture);
-
-		// Create glossiness texture
-		m_pGlossinessTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_gloss.png", Texture::TextureType::Glossiness);
-		m_pEffect->SetTexture(m_pGlossinessTexture);
 
 		// Create Input Layout
 		m_pInputLayout = m_pEffect->LoadInputLayout(pDevice);
@@ -121,9 +105,9 @@ namespace dae
 	void Mesh::SetMatrices(const Matrix& viewProjectionMatrix, const Matrix& inverseViewMatrix)
 	{
 		Matrix worldMatrix{ m_ScaleMatrix * m_RotationMatrix * m_TranslationMatrix };
-		m_pEffect->SetWorldViewProjectionMatrix(worldMatrix * viewProjectionMatrix);
-		m_pEffect->SetInverseViewMatrix(inverseViewMatrix);
-		m_pEffect->SetWorldMatrix(worldMatrix);
+		m_pEffect->SetMatrix(MatrixType::WorldViewProjection, worldMatrix * viewProjectionMatrix);
+		m_pEffect->SetMatrix(MatrixType::InverseView, inverseViewMatrix);
+		m_pEffect->SetMatrix(MatrixType::World, worldMatrix);
 	}
 
 	void Mesh::SetSamplerState(ID3D11SamplerState* pSampleState)

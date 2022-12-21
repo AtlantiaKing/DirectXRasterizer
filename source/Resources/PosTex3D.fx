@@ -23,6 +23,26 @@ SamplerState gSamState : SampleState
 	AddressV = Wrap; // or Mirror, Clamp, Border
 };
 
+RasterizerState gRasterizerState
+{
+	CullMode = back;
+	FrontCounterClockwise = false; // default
+};
+
+BlendState gBlendState
+{
+	BlendEnable[0] = false;
+	RenderTargetWriteMask[0] = 0x0F;
+};
+
+DepthStencilState gDepthStencilState
+{
+	DepthEnable = true;
+	DepthWriteMask = 1;
+	DepthFunc = less;
+	StencilEnable = false;
+};
+
 //------------------------------------------------
 // Input/Output Struct
 //------------------------------------------------
@@ -103,6 +123,9 @@ technique11 DefaultTechnique
 {
 	pass P0
 	{
+		SetRasterizerState(gRasterizerState);
+		SetDepthStencilState(gDepthStencilState, 0);
+		SetBlendState(gBlendState, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
 		SetVertexShader(CompileShader(vs_5_0, VS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_5_0, PS()));

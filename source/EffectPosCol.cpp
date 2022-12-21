@@ -8,7 +8,7 @@ namespace dae
 	{
 	}
 
-	ID3D11InputLayout* EffectPosCol::LoadInputLayout(ID3D11Device* pDevice)
+	/*ID3D11InputLayout* EffectPosCol::LoadInputLayout(ID3D11Device* pDevice)
 	{
 		static constexpr uint32_t numElements{ 2 };
 		D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
@@ -39,5 +39,5 @@ namespace dae
 		if (FAILED(result)) return nullptr;
 
 		return pInputLayout;
-	}
+	}*/
 }

@@ -2,6 +2,8 @@
 
 namespace dae
 {
+	class Texture;
+
 	class Effect
 	{
 	public:
@@ -13,12 +15,12 @@ namespace dae
 		Effect& operator=(const Effect&)	= delete;
 		Effect& operator=(Effect&&)			= delete;
 
+		virtual void SetMatrix(MatrixType type, const Matrix& matrix);
+		virtual void SetTexture(Texture* pTexture) = 0;
 		ID3DX11Effect* GetEffect() const;
 		ID3DX11EffectTechnique* GetTechnique() const;
 
-		void SetWorldViewProjectionMatrix(const Matrix& matrix);
-
-		virtual ID3D11InputLayout* LoadInputLayout(ID3D11Device* pDevice) = 0;
+		ID3D11InputLayout* LoadInputLayout(ID3D11Device* pDevice);
 	protected:
 		ID3DX11Effect* m_pEffect{};
 		ID3DX11EffectTechnique* m_pTechnique{};

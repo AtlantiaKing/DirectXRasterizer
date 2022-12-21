@@ -3,11 +3,13 @@
 
 namespace dae
 {
+	class Texture;
+
 	class EffectPosCol final : public Effect
 	{
 	public:
 		EffectPosCol(ID3D11Device* pDevice, const std::wstring& assetFile);
 
-		virtual ID3D11InputLayout* LoadInputLayout(ID3D11Device* pDevice) override;
+		virtual void SetTexture(Texture* pTexture) override {};
 	};
 }

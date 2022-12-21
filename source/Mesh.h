@@ -3,7 +3,7 @@
 namespace dae
 {
 	class Texture;
-	class EffectPosTex;
+	class Effect;
 
 	/*struct Vertex final
 	{
@@ -21,7 +21,7 @@ namespace dae
 	class Mesh final
 	{
 	public:
-		Mesh(ID3D11Device* pDevice, const std::string& resourcePath, ID3D11SamplerState* pSampleState = nullptr);
+		Mesh(ID3D11Device* pDevice, const std::string& resourcePath, Effect* pEffect, ID3D11SamplerState* pSampleState = nullptr);
 		~Mesh();
 
 		Mesh(const Mesh&)				= delete;
@@ -45,7 +45,7 @@ namespace dae
 		Texture* m_pSpecularTexture{};
 		Texture* m_pGlossinessTexture{};
 
-		EffectPosTex* m_pEffect{};
+		Effect* m_pEffect{};
 
 		ID3D11InputLayout* m_pInputLayout{};
 
