@@ -13,6 +13,8 @@ namespace dae
 	struct Vertex final
 	{
 		Vector3 position;
+		Vector3 normal;
+		Vector3 tangent;
 		Vector2 uv;
 	};
 
@@ -31,14 +33,18 @@ namespace dae
 
 		void SetPosition(const Vector3& position);
 		void RotateY(float rotation);
-		void SetWorldViewProjectionMatrix(const Matrix& viewProjectionMatrix);
+		void SetMatrices(const Matrix& viewProjectionMatrix, const Matrix& inverseViewMatrix);
 		void SetSamplerState(ID3D11SamplerState* pSampleState);
 	private:
 		Matrix m_TranslationMatrix{ Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ, Vector3::Zero };
 		Matrix m_RotationMatrix{ Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ, Vector3::Zero };
 		Matrix m_ScaleMatrix{ Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ, Vector3::Zero };
 
-		Texture* m_pTexture{};
+		Texture* m_pDiffuseTexture{};
+		Texture* m_pNormalTexture{};
+		Texture* m_pSpecularTexture{};
+		Texture* m_pGlossinessTexture{};
+
 		EffectPosTex* m_pEffect{};
 
 		ID3D11InputLayout* m_pInputLayout{};

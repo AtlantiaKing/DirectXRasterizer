@@ -32,7 +32,7 @@ namespace dae
 			m_Origin
 		};
 
-		m_ViewMatrix = m_InvViewMatrix.Inverse();
+		m_ViewMatrix = Matrix::Inverse(m_InvViewMatrix);
 
 		//ViewMatrix => Matrix::CreateLookAtLH(...) [not implemented yet]
 		//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixlookatlh

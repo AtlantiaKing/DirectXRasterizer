@@ -19,9 +19,21 @@ namespace dae
 			return;
 		}
 
-		// Create texture
-		m_pTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_diffuse.png");
-		m_pEffect->SetDiffuseMap(m_pTexture);
+		// Create diffuse texture
+		m_pDiffuseTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_diffuse.png", Texture::TextureType::Diffuse);
+		m_pEffect->SetTexture(m_pDiffuseTexture);
+
+		// Create normal texture
+		m_pNormalTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_normal.png", Texture::TextureType::Normal);
+		m_pEffect->SetTexture(m_pNormalTexture);
+
+		// Create specular texture
+		m_pSpecularTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_specular.png", Texture::TextureType::Specular);
+		m_pEffect->SetTexture(m_pSpecularTexture);
+
+		// Create glossiness texture
+		m_pGlossinessTexture = Texture::LoadFromFile(pDevice, "Resources/vehicle_gloss.png", Texture::TextureType::Glossiness);
+		m_pEffect->SetTexture(m_pGlossinessTexture);
 
 		// Create Input Layout
 		m_pInputLayout = m_pEffect->LoadInputLayout(pDevice);
@@ -62,7 +74,10 @@ namespace dae
 
 		if (m_pInputLayout) m_pInputLayout->Release();
 
-		delete m_pTexture;
+		delete m_pDiffuseTexture;
+		delete m_pNormalTexture;
+		delete m_pSpecularTexture;
+		delete m_pGlossinessTexture;
 
 		delete m_pEffect;
 	}
@@ -103,9 +118,12 @@ namespace dae
 		m_RotationMatrix = Matrix::CreateRotationY(rotation) * m_RotationMatrix;
 	}
 
-	void Mesh::SetWorldViewProjectionMatrix(const Matrix& viewProjectionMatrix)
+	void Mesh::SetMatrices(const Matrix& viewProjectionMatrix, const Matrix& inverseViewMatrix)
 	{
-		m_pEffect->SetWorldViewProjectionMatrix(m_ScaleMatrix * m_RotationMatrix * m_TranslationMatrix * viewProjectionMatrix);
+		Matrix worldMatrix{ m_ScaleMatrix * m_RotationMatrix * m_TranslationMatrix };
+		m_pEffect->SetWorldViewProjectionMatrix(worldMatrix * viewProjectionMatrix);
+		m_pEffect->SetInverseViewMatrix(inverseViewMatrix);
+		m_pEffect->SetWorldMatrix(worldMatrix);
 	}
 
 	void Mesh::SetSamplerState(ID3D11SamplerState* pSampleState)

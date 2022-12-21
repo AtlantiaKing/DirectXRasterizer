@@ -3,7 +3,8 @@
 
 namespace dae
 {
-	Texture::Texture(ID3D11Device* pDevice, SDL_Surface* pSurface)
+	Texture::Texture(ID3D11Device* pDevice, SDL_Surface* pSurface, TextureType type)
+		: m_Type{ type }
 	{
 		// Create the texture description
 		const DXGI_FORMAT format{ DXGI_FORMAT_R8G8B8A8_UNORM };
@@ -49,11 +50,11 @@ namespace dae
 		if(m_pResource) m_pResource->Release();
 	}
 
-	Texture* Texture::LoadFromFile(ID3D11Device* pDevice, const std::string& path)
+	Texture* Texture::LoadFromFile(ID3D11Device* pDevice, const std::string& path, TextureType type)
 	{
 		// Load SDL_Surface using IMG_LOAD
 		// Create & Return a new Texture Object (using SDL_Surface)
-		return new Texture{ pDevice, IMG_Load(path.c_str()) };
+		return new Texture{ pDevice, IMG_Load(path.c_str()), type };
 	}
 
 	ID3D11Texture2D* Texture::GetResource() const
@@ -64,5 +65,11 @@ namespace dae
 	ID3D11ShaderResourceView* Texture::GetSRV() const
 	{
 		return m_pSRV;
+	}
+
+	
+	Texture::TextureType Texture::GetType() const
+	{
+		return m_Type;
 	}
 }

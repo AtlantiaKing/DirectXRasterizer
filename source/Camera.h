@@ -21,6 +21,7 @@ namespace dae
 		void ChangeFOV(float newFov);
 
 		Matrix& GetViewMatrix() { return m_ViewMatrix; };
+		Matrix& GetInverseViewMatrix() { return m_InvViewMatrix; };
 		Matrix& GetProjectionMatrix() { return m_ProjectionMatrix; };
 	private:
 		Vector3 m_Origin{};

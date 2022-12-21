@@ -236,6 +236,6 @@ namespace dae {
 	{
 		const Matrix ViewProjMatrix{ m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix() };
 
-		m_pMesh->SetWorldViewProjectionMatrix(ViewProjMatrix);
+		m_pMesh->SetMatrices(ViewProjMatrix, m_pCamera->GetInverseViewMatrix());
 	}
 }
