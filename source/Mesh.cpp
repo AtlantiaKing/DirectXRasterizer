@@ -112,9 +112,6 @@ namespace dae
 
 	void Mesh::SetSamplerState(ID3D11SamplerState* pSampleState)
 	{
-		ID3DX11EffectSamplerVariable* pSamplerStateVariable{ m_pEffect->GetEffect()->GetVariableByName("gSamState")->AsSampler() };
-
-		HRESULT hr{ pSamplerStateVariable->SetSampler(0, pSampleState) };
-		if (FAILED(hr)) std::wcout << L"Failed to change sample state";
+		m_pEffect->SetSampleState(pSampleState);
 	}
 }

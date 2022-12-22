@@ -2,7 +2,7 @@
 #include "Renderer.h"
 #include "Mesh.h"
 #include "Camera.h"
-#include "EffectPosTex.h"
+#include "EffectShaded.h"
 #include "EffectTransparent.h"
 #include "Texture.h"
 
@@ -26,32 +26,13 @@ namespace dae {
 			std::cout << "DirectX initialization failed!\n";
 		}
 
+		// Load the meshes
+		LoadMeshes();
+
+		// Load the initial sample state
 		LoadSampleState(D3D11_FILTER_MIN_MAG_MIP_POINT);
 
-		EffectPosTex* vehicleMaterial{ new EffectPosTex{ m_pDevice, L"Resources/PosTex3D.fx" } };
-		Texture* pVehicleDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_diffuse.png", Texture::TextureType::Diffuse) };
-		vehicleMaterial->SetTexture(pVehicleDiffuseTexture);
-		Texture* pNormalTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_normal.png", Texture::TextureType::Normal) };
-		vehicleMaterial->SetTexture(pNormalTexture);
-		Texture* pSpecularTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_specular.png", Texture::TextureType::Specular) };
-		vehicleMaterial->SetTexture(pSpecularTexture);
-		Texture* pGlossinessTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_gloss.png", Texture::TextureType::Glossiness) };
-		vehicleMaterial->SetTexture(pGlossinessTexture);
-		delete pGlossinessTexture;
-		delete pSpecularTexture;
-		delete pNormalTexture;
-		delete pVehicleDiffuseTexture;
-
-		Mesh* pVehicle{ new Mesh{ m_pDevice, "Resources/vehicle.obj", vehicleMaterial, m_pSampleState } };
-		m_pMeshes.push_back(pVehicle);
-
-		EffectTransparent* transparentMaterial{ new EffectTransparent{ m_pDevice, L"Resources/Transparent3D.fx" } };
-		Texture* pFireDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/fireFX_diffuse.png", Texture::TextureType::Diffuse) };
-		transparentMaterial->SetTexture(pFireDiffuseTexture);
-		Mesh* pFire{ new Mesh{ m_pDevice, "Resources/fireFX.obj", transparentMaterial, m_pSampleState } };
-		m_pMeshes.push_back(pFire);
-		delete pFireDiffuseTexture;
-
+		// Create and initialize the camera
 		m_pCamera = new Camera{};
 		m_pCamera->Initialize(45.0f, { 0.0f, 0.0f, -50.0f }, static_cast<float>(m_Width) / m_Height);
 	}
@@ -85,17 +66,20 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
+		// Update camera movement
 		m_pCamera->Update(pTimer);
 
+		// Transform meshes
 		const float rotateSpeed{ 45.0f };
-		/*for_each(
+		for_each(
 			begin(m_pMeshes),
 			end(m_pMeshes),
 			[&](Mesh* pMesh)
 			{
 				pMesh->RotateY(rotateSpeed * TO_RADIANS * pTimer->GetElapsed());
-			});*/
+			});
 
+		// Update the world view projection matrices
 		UpdateWorldViewProjection();
 	}
 
@@ -104,12 +88,12 @@ namespace dae {
 		if (!m_IsInitialized)
 			return;
 
-		// 1. Clear RTV and DSV
+		// Clear RTV and DSV
 		ColorRGB clearColor{ 0.0f, 0.0f, 0.3f };
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		// 2. Set pipeline + Invoke drawcalls (= render)for_each(
+		// Set pipeline + Invoke drawcalls (= render)for_each(
 		for_each(
 			begin(m_pMeshes),
 			end(m_pMeshes),
@@ -118,14 +102,16 @@ namespace dae {
 				pMesh->Render(m_pDeviceContext);
 			});
 
-		// 3. Present backbuffer (swap)
+		// Present backbuffer (swap)
 		m_pSwapChain->Present(0, 0);
 	}
 
 	void Renderer::ToggleRenderSampleState()
 	{
+		// Go to the next sample state
 		m_SampleState = static_cast<SampleState>((static_cast<int>(m_SampleState) + 1) % (static_cast<int>(SampleState::Anisotropic) + 1));
 
+		// Get the right D3D11 Filter
 		D3D11_FILTER newFilter{};
 		std::cout << "Changed sample state to: ";
 		switch (m_SampleState)
@@ -144,20 +130,13 @@ namespace dae {
 			break;
 		}
 
+		// Load the new filter in the sample state
 		LoadSampleState(newFilter);
-
-		for_each(
-			begin(m_pMeshes),
-			end(m_pMeshes),
-			[&](Mesh* pMesh)
-			{
-				pMesh->SetSamplerState(m_pSampleState);
-			});
 	}
 
 	HRESULT Renderer::InitializeDirectX()
 	{
-		// 1. Create Device and DeviceContext
+		// Create Device and DeviceContext
 		D3D_FEATURE_LEVEL featureLevel{ D3D_FEATURE_LEVEL_11_1 };
 		uint32_t createDeviceFlags{ 0 };
 
@@ -169,7 +148,7 @@ namespace dae {
 			1, D3D11_SDK_VERSION, &m_pDevice, nullptr, &m_pDeviceContext) };
 		if (FAILED(result)) return result;
 
-		// 2. Create Swapchain
+		// Create Swapchain
 		// 
 		// Create DXGI Factory
 		IDXGIFactory1* pDxgiFactory{};
@@ -205,7 +184,7 @@ namespace dae {
 
 		if (FAILED(result)) return result;
 
-		// 3. Create DepthStencil (DS) and DepthStencilView (DSV)
+		// Create DepthStencil (DS) and DepthStencilView (DSV)
 		// Resource
 		D3D11_TEXTURE2D_DESC depthStencilDesc{};
 		depthStencilDesc.Width = m_Width;
@@ -234,7 +213,8 @@ namespace dae {
 		result = m_pDevice->CreateDepthStencilView(m_pDepthStencilBuffer, &depthStencilViewDesc, &m_pDepthStencilView);
 		if (FAILED(result)) return result;
 
-		// 4. Create RenderTarget (RT) and RenderTargetView (RTV)
+		// Create RenderTarget (RT) and RenderTargetView (RTV)
+		// 
 		// Resource
 		result = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&m_pRenderTargetBuffer));
 		if (FAILED(result)) return result;
@@ -243,10 +223,10 @@ namespace dae {
 		result = m_pDevice->CreateRenderTargetView(m_pRenderTargetBuffer, nullptr, &m_pRenderTargetView);
 		if (FAILED(result)) return result;
 
-		// 5. Bind RTV and DSV to Output Merger Stage
+		// Bind RTV and DSV to Output Merger Stage
 		m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
-		// 6. Set viewport
+		// Set viewport
 		D3D11_VIEWPORT viewport{};
 		viewport.Width = static_cast<float>(m_Width);
 		viewport.Height = static_cast<float>(m_Height);
@@ -259,8 +239,55 @@ namespace dae {
 		return S_OK;
 	}
 
+	void Renderer::LoadMeshes()
+	{
+		// Create the vehicle effect
+		EffectShaded* vehicleMaterial{ new EffectShaded{ m_pDevice, L"Resources/PosTex3D.fx" } };
+
+		// Load all the textures needed for the vehicle
+		Texture* pVehicleDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_diffuse.png", Texture::TextureType::Diffuse) };
+		Texture* pNormalTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_normal.png", Texture::TextureType::Normal) };
+		Texture* pSpecularTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_specular.png", Texture::TextureType::Specular) };
+		Texture* pGlossinessTexture{ Texture::LoadFromFile(m_pDevice, "Resources/vehicle_gloss.png", Texture::TextureType::Glossiness) };
+
+		// Apply the textures to the vehicle effect
+		vehicleMaterial->SetTexture(pVehicleDiffuseTexture);
+		vehicleMaterial->SetTexture(pNormalTexture);
+		vehicleMaterial->SetTexture(pSpecularTexture);
+		vehicleMaterial->SetTexture(pGlossinessTexture);
+
+		// Release all the textures
+		delete pVehicleDiffuseTexture;
+		delete pNormalTexture;
+		delete pSpecularTexture;
+		delete pGlossinessTexture;
+
+		// Create the vehicle mesh and add it to the list of meshes
+		Mesh* pVehicle{ new Mesh{ m_pDevice, "Resources/vehicle.obj", vehicleMaterial, m_pSampleState } };
+		m_pMeshes.push_back(pVehicle);
+
+
+
+		// Create the fire effect
+		EffectTransparent* transparentMaterial{ new EffectTransparent{ m_pDevice, L"Resources/Transparent3D.fx" } };
+
+		// Load the texture needed for the fire
+		Texture* pFireDiffuseTexture{ Texture::LoadFromFile(m_pDevice, "Resources/fireFX_diffuse.png", Texture::TextureType::Diffuse) };
+
+		// Apply the texture to the fire effect
+		transparentMaterial->SetTexture(pFireDiffuseTexture);
+
+		// Release the texture
+		delete pFireDiffuseTexture;
+
+		// Create the fire mesh and add it ot the list of meshes
+		Mesh* pFire{ new Mesh{ m_pDevice, "Resources/fireFX.obj", transparentMaterial, m_pSampleState } };
+		m_pMeshes.push_back(pFire);
+	}
+
 	void Renderer::LoadSampleState(D3D11_FILTER filter)
 	{
+		// Create the SampleState description
 		D3D11_SAMPLER_DESC sampleDesc{};
 		sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 		sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -272,16 +299,29 @@ namespace dae {
 		sampleDesc.MaxAnisotropy = 16;
 		sampleDesc.Filter = filter;
 
+		// Release the current sample state if one exists
 		if (m_pSampleState) m_pSampleState->Release();
 
+		// Create a new sample state
 		HRESULT hr{ m_pDevice->CreateSamplerState(&sampleDesc, &m_pSampleState) };
 		if (FAILED(hr)) std::wcout << L"m_pSampleState failed to load\n";
+
+		// Update the sample state in all the meshes
+		for_each(
+			begin(m_pMeshes),
+			end(m_pMeshes),
+			[&](Mesh* pMesh)
+			{
+				pMesh->SetSamplerState(m_pSampleState);
+			});
 	}
 
 	void Renderer::UpdateWorldViewProjection()
 	{
+		// Calculate the viewprojection matrix
 		const Matrix ViewProjMatrix{ m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix() };
 
+		// Set the viewprojection matrix in all the meshes
 		for_each(
 			begin(m_pMeshes), 
 			end(m_pMeshes), 

@@ -53,6 +53,7 @@ namespace dae
 		ID3D11RenderTargetView* m_pRenderTargetView{};
 
 		HRESULT InitializeDirectX();
+		void LoadMeshes();
 		void LoadSampleState(D3D11_FILTER filter);
 		void UpdateWorldViewProjection();
 	};

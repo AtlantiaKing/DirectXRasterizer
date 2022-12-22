@@ -5,10 +5,10 @@ namespace dae
 {
 	class Texture;
 
-	class EffectPosTex final : public Effect
+	class EffectShaded final : public Effect
 	{
 	public:
-		EffectPosTex(ID3D11Device* pDevice, const std::wstring& assetFile);
+		EffectShaded(ID3D11Device* pDevice, const std::wstring& assetFile);
 
 		virtual void SetMatrix(MatrixType type, const Matrix& matrix) override;
 		void SetTexture(Texture* pTexture);

@@ -38,7 +38,7 @@
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="EffectPosTex.h">
+    <ClInclude Include="EffectShaded.h">
       <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="EffectPosCol.h">
@@ -86,7 +86,7 @@
     <ClCompile Include="EffectPosCol.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="EffectPosTex.cpp">
+    <ClCompile Include="EffectShaded.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
     <ClCompile Include="Effect.cpp">

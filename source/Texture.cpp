@@ -21,6 +21,7 @@ namespace dae
 		desc.CPUAccessFlags = 0;
 		desc.MiscFlags = 0;
 
+		// Create intialize data for subresource
 		D3D11_SUBRESOURCE_DATA initData{};
 		initData.pSysMem = pSurface->pixels;
 		initData.SysMemPitch = static_cast<UINT>(pSurface->pitch);
@@ -67,7 +68,6 @@ namespace dae
 		return m_pSRV;
 	}
 
-	
 	Texture::TextureType Texture::GetType() const
 	{
 		return m_Type;

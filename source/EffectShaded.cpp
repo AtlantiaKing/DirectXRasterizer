@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "EffectPosTex.h"
+#include "EffectShaded.h"
 #include "Texture.h"
 
 namespace dae
 {
-	dae::EffectPosTex::EffectPosTex(ID3D11Device* pDevice, const std::wstring& assetFile)
+	dae::EffectShaded::EffectShaded(ID3D11Device* pDevice, const std::wstring& assetFile)
 		: Effect{ pDevice, assetFile }
 	{
 		// Save the diffuse texture variable of the effect as a member variable
@@ -32,8 +32,10 @@ namespace dae
 		if (!m_pMatInverseViewVariable->IsValid()) std::wcout << L"m_pMatInverseViewVariable not valid\n";
 	}
 
-	void EffectPosTex::SetMatrix(MatrixType type, const Matrix& matrix)
+	void EffectShaded::SetMatrix(MatrixType type, const Matrix& matrix)
 	{
+		// Set the given matrix to the right variable depending on the matrix type
+		// If none of the matrix types are specified here, call the base SetMatrix function
 		switch (type)
 		{
 		case dae::MatrixType::World:
@@ -52,10 +54,12 @@ namespace dae
 		}
 	}
 
-	void EffectPosTex::SetTexture(Texture* pTexture)
+	void EffectShaded::SetTexture(Texture* pTexture)
 	{
+		// The current texture variable in the effect
 		ID3DX11EffectShaderResourceVariable* pCurMapVariable{};
 
+		// Get the right texture variable depending on the texture type
 		switch (pTexture->GetType())
 		{
 		case dae::Texture::TextureType::Diffuse:

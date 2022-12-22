@@ -13,6 +13,10 @@ namespace dae
 		// Save the worldviewprojection variable of the effect as a member variable
 		m_pMatWorldViewProjVariable = m_pEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
 		if (!m_pMatWorldViewProjVariable->IsValid()) std::wcout << L"m_pMatWorldViewProjVariable not valid\n";
+
+		// Save the samplestate variable of the effect as a member variable
+		m_pSamplerStateVariable = m_pEffect->GetVariableByName("gSamState")->AsSampler();
+		if (!m_pSamplerStateVariable->IsValid()) std::wcout << L"m_pSamplerStateVariable not valid\n";
 	}
 
 	Effect::~Effect()
@@ -88,6 +92,12 @@ namespace dae
 		return pInputLayout;
 	}
 
+	void Effect::SetSampleState(ID3D11SamplerState* pSampleState)
+	{
+		HRESULT hr{ m_pSamplerStateVariable->SetSampler(0, pSampleState) };
+		if (FAILED(hr)) std::wcout << L"Failed to change sample state";
+	}
+
 	ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile) const
 	{
 		HRESULT result;
@@ -101,6 +111,7 @@ namespace dae
 		shaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
+		// Load the effect form the file
 		result = D3DX11CompileEffectFromFile
 		(
 			assetFile.c_str(),
@@ -113,6 +124,7 @@ namespace dae
 			&pErrorBlob
 		);
 
+		// If loading the effect failed, print an error message
 		if (FAILED(result))
 		{
 			if (pErrorBlob != nullptr)

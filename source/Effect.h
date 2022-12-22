@@ -21,10 +21,12 @@ namespace dae
 		ID3DX11EffectTechnique* GetTechnique() const;
 
 		ID3D11InputLayout* LoadInputLayout(ID3D11Device* pDevice);
+		void SetSampleState(ID3D11SamplerState* pSampleState);
 	protected:
 		ID3DX11Effect* m_pEffect{};
 		ID3DX11EffectTechnique* m_pTechnique{};
 		ID3DX11EffectMatrixVariable* m_pMatWorldViewProjVariable{};
+		ID3DX11EffectSamplerVariable* m_pSamplerStateVariable{};
 
 
 		ID3DX11Effect* LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile) const;
