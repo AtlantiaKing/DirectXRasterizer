@@ -68,6 +68,8 @@ namespace dae
 
 	void Mesh::Render(ID3D11DeviceContext* pDeviceContext) const
 	{
+		if (!m_IsVisible) return;
+
 		// Set primitive topology
 		pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -92,6 +94,11 @@ namespace dae
 		}
 	}
 
+	bool Mesh::IsVisible() const
+	{
+		return m_IsVisible;
+	}
+
 	void Mesh::SetPosition(const Vector3& position)
 	{
 		m_TranslationMatrix = Matrix::CreateTranslation(position);
@@ -113,5 +120,10 @@ namespace dae
 	void Mesh::SetSamplerState(ID3D11SamplerState* pSampleState)
 	{
 		m_pEffect->SetSampleState(pSampleState);
+	}
+
+	void Mesh::SetVisibility(bool isVisible)
+	{
+		m_IsVisible = isVisible;
 	}
 }

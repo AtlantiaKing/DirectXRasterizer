@@ -44,6 +44,7 @@ int main(int argc, char* args[])
 	pTimer->Start();
 	float printTimer = 0.f;
 	bool isLooping = true;
+	bool isShowingFPS{ false };
 	while (isLooping)
 	{
 		//--------- Get input events ---------
@@ -57,7 +58,23 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				//Test for a key
-				if (e.key.keysym.scancode == SDL_SCANCODE_F2) pRenderer->ToggleRenderSampleState();
+				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				{
+					pRenderer->ToggleMeshRotation();
+				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+				{
+					pRenderer->ToggleVisibilty(1);
+				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F4)
+				{
+					pRenderer->ToggleRenderSampleState();
+				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F11)
+				{
+					isShowingFPS = !isShowingFPS;
+					printTimer = 0.f;
+				}
 				break;
 			default: ;
 			}
@@ -72,7 +89,7 @@ int main(int argc, char* args[])
 		//--------- Timer ---------
 		pTimer->Update();
 		printTimer += pTimer->GetElapsed();
-		if (printTimer >= 1.f)
+		if (isShowingFPS && printTimer >= 1.f)
 		{
 			printTimer = 0.f;
 			std::cout << "dFPS: " << pTimer->GetdFPS() << std::endl;

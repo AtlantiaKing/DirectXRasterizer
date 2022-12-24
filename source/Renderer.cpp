@@ -68,19 +68,19 @@ namespace dae {
 	{
 		// Update camera movement
 		m_pCamera->Update(pTimer);
-
-		// Transform meshes
-		const float rotateSpeed{ 45.0f };
-		for_each(
-			begin(m_pMeshes),
-			end(m_pMeshes),
-			[&](Mesh* pMesh)
+		
+		if (m_IsRotatingMesh)
+		{
+			// Transform meshes
+			const float rotateSpeed{ 45.0f };
+			for (Mesh* pMesh : m_pMeshes)
 			{
 				pMesh->RotateY(rotateSpeed * TO_RADIANS * pTimer->GetElapsed());
-			});
+			}
 
-		// Update the world view projection matrices
-		UpdateWorldViewProjection();
+			// Update the world view projection matrices
+			UpdateWorldViewProjection();
+		}
 	}
 
 	void Renderer::Render() const
@@ -93,14 +93,11 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		// Set pipeline + Invoke drawcalls (= render)for_each(
-		for_each(
-			begin(m_pMeshes),
-			end(m_pMeshes),
-			[&](Mesh* pMesh)
-			{
-				pMesh->Render(m_pDeviceContext);
-			});
+		// Set pipeline + Invoke drawcalls (= render)
+		for (Mesh* pMesh : m_pMeshes)
+		{
+			pMesh->Render(m_pDeviceContext);
+		}
 
 		// Present backbuffer (swap)
 		m_pSwapChain->Present(0, 0);
@@ -132,6 +129,26 @@ namespace dae {
 
 		// Load the new filter in the sample state
 		LoadSampleState(newFilter);
+	}
+
+	void Renderer::SetVisibility(int index, bool isVisible)
+	{
+		if (m_pMeshes.size() <= index) return;
+
+		m_pMeshes[index]->SetVisibility(isVisible);
+	}
+
+	void Renderer::ToggleVisibilty(int index)
+	{
+		if (m_pMeshes.size() <= index) return;
+
+		Mesh* pMesh{ m_pMeshes[index] };
+		pMesh->SetVisibility(!pMesh->IsVisible());
+	}
+
+	void Renderer::ToggleMeshRotation()
+	{
+		m_IsRotatingMesh = !m_IsRotatingMesh;
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -307,13 +324,10 @@ namespace dae {
 		if (FAILED(hr)) std::wcout << L"m_pSampleState failed to load\n";
 
 		// Update the sample state in all the meshes
-		for_each(
-			begin(m_pMeshes),
-			end(m_pMeshes),
-			[&](Mesh* pMesh)
-			{
-				pMesh->SetSamplerState(m_pSampleState);
-			});
+		for (Mesh* pMesh : m_pMeshes)
+		{
+			pMesh->SetSamplerState(m_pSampleState);
+		}
 	}
 
 	void Renderer::UpdateWorldViewProjection()
@@ -322,12 +336,9 @@ namespace dae {
 		const Matrix ViewProjMatrix{ m_pCamera->GetViewMatrix() * m_pCamera->GetProjectionMatrix() };
 
 		// Set the viewprojection matrix in all the meshes
-		for_each(
-			begin(m_pMeshes), 
-			end(m_pMeshes), 
-			[&](Mesh* pMesh)
-			{
-				pMesh->SetMatrices(ViewProjMatrix, m_pCamera->GetInverseViewMatrix());
-			});
+		for (Mesh* pMesh : m_pMeshes)
+		{
+			pMesh->SetMatrices(ViewProjMatrix, m_pCamera->GetInverseViewMatrix());
+		}
 	}
 }

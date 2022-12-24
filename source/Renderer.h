@@ -22,6 +22,9 @@ namespace dae
 		void Update(const Timer* pTimer);
 		void Render() const;
 		void ToggleRenderSampleState();
+		void SetVisibility(int index, bool isVisible);
+		void ToggleVisibilty(int index);
+		void ToggleMeshRotation();
 
 	private:
 		enum class SampleState
@@ -41,6 +44,7 @@ namespace dae
 		Camera* m_pCamera{};
 		std::vector<Mesh*> m_pMeshes{};
 		SampleState m_SampleState{ SampleState::Point };
+		bool m_IsRotatingMesh{ true };
 
 		//DIRECTX
 		ID3D11SamplerState* m_pSampleState{};
